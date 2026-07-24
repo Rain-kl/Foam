@@ -14,8 +14,6 @@ Thumbs.db
 /config.yaml
 /config.local.yaml
 /config.*.local.yaml
-/docs/*
-/docs/rules/*
 /backend/docs/goal/
 *.har
 *.pcap
@@ -29,6 +27,7 @@ Thumbs.db
 # Go
 /.gocache/
 /.gocache-*/
+/bin/
 /backend/grok2api
 /backend/coverage.out
 *.coverprofile
@@ -45,3 +44,4 @@ Thumbs.db
 /release/
 /.tmp/
 /tmp/
+/.superpowers/
