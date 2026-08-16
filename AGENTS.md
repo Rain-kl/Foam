@@ -1,38 +1,82 @@
-# AGENTS.md — Foam AI 助手工作操作手册
+# AGENTS.md
 
-本文件面向 AI 开发助手，定义其职责与操作规范。
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
-**Foam** 是可二次开发的全栈脚手架（Go 后端 + React 管理端示例画廊），不是空目录模板：
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-- 后端：薄组合根 + 管理员认证 + 系统设置 + `example` 垂直切片 CRUD
-- 前端：admin shell 上的组件 / 页面示例画廊（`/example/*`）
-- 扩展方式：复制 `example` 切片，而不是从零发明分层
+## 1. Think Before Coding
 
-| 项 | 值 |
-| --- | --- |
-| Go module | `github.com/Rain-kl/Foam/backend` |
-| 二进制 / cmd | `foam`（`backend/cmd/foam`） |
-| 前端包名 | `foam-frontend` |
-| 默认配置 | 仓库根 `config.yaml`（从 `config.example.yaml` 复制） |
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
 
-更细的长文按需阅读：`docs/architecture.md`、`docs/backend-development.md`、`docs/frontend-development.md`、`docs/directory-map.md`。
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+## 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
 
 ## Git 提交规范
 
-遵循 Conventional Commits：`<type>(<scope>): <subject>`（例：`feat(example): add list filter`）。
+遵循 Conventional Commits：`<type>(<scope>): <subject>`（例：`feat(auth): support email login`）。
 
-- `type`：`feat` / `fix` / `docs` / `refactor` / `test` / `chore` 等
-- 文案中性：使用 Foam / 通用 demo 用语，不要引入已剥离的业务产品话术
+更细的长文按需阅读：`docs/architecture.md`、`docs/backend-development.md`、`docs/frontend-development.md`、`docs/directory-map.md`。
 
 ## 务必阅读匹配的 Skill
 
-技能目录：`.agent/skills/<name>/SKILL.md`。
+技能目录：`.agents/skills/<name>/SKILL.md`。
 
 | Skill | 何时使用 |
 | :--- | :--- |
 | `new-api` | 添加或修改业务 API、垂直切片、Handler、application service、repository、路由注册（**优先读**） |
-| `go-testing` | 编写或改造 Go 测试、表驱动、集成测试约定 |
-| `go-logging` | 结构化日志、上下文日志字段 |
 | `shadcn` | 添加、修改或组合 shadcn/ui 组件 |
 | `code-review-skill` | 代码评审、PR 检查清单 |
 | `release-guide` | 版本发布、Version Bump、Release 说明 |
@@ -59,40 +103,6 @@
 
 - **后端**：Go 1.26、Gin、GORM、SQLite / PostgreSQL、JWT + refresh cookie、Swaggo（可选）。
 - **前端**：React 19、Vite、TypeScript、Tailwind CSS、pnpm、shadcn/ui、React Router、TanStack Query、i18next。
-
-### 顶层目录
-
-- `AGENTS.md`：本文件（AI 操作手册入口）。
-- `config.example.yaml` / `config.yaml`：配置模板与本地配置（勿提交 secrets）。
-- `.env.example` / `.env`：环境变量模板与本地密钥（`FOAM_*`；优先级高于 YAML；勿提交 `.env`）。
-- `Makefile`：`dev` / `format` / `code-check` / `build-*` / `run` / `swagger` 等。
-- `backend/`：Go module（`github.com/Rain-kl/Foam/backend`）。
-- `frontend/`：React 管理端 SPA。
-- `docs/`：架构与开发指南（人工维护）。
-- `docker/` · `Dockerfile` · `docker-compose.yml`：容器化。
-- `.agent/skills/`：按任务触发的技能说明。
-- `bin/` · `data/` · `VERSION`：本地二进制、运行数据、版本号。
-
-### 后端目录 (`backend/internal/`)
-
-- `cmd/foam/`：进程入口。
-- `cli/`：flags / `--config` / 启动参数。
-- `app/`：**唯一组合根**（DB、bootstrap admin、DI、HTTP Server）。
-- `domain/<name>/`：实体与纯领域类型。
-- `application/<name>/`：用例服务（`context.Context`，无 Gin）。
-- `repository/`：持久化接口与分页等共享查询类型。
-- `infra/config` · `security` · `persistence/relational` · `observability`：配置、JWT/密码、GORM 实现、日志。
-- `transport/http/`：Gin 引擎、中间件、各域 handler（`adminauth` / `example` / `settings` / `system`）。
-- `shared/response/`：Wavelet 风格 API 信封。
-- `buildinfo/`：版本注入。
-
-### 前端目录 (`frontend/`)
-
-- `src/app/`：providers、auth boundary、app shell、router、懒加载出口。
-- `src/features/auth` · `example` · `settings`：登录、示例画廊、系统设置。
-- `src/components/ui/`：shadcn/ui 原子组件。
-- `src/shared/api` · `auth` · `components` · `config` · `i18n` · `lib`：HTTP 客户端、鉴权、跨页组件、运行时配置。
-- `public/` · `vite.config.ts`：静态资源；开发服 `:8010` 反代 `/api` → 后端 `:8000`。
 
 ## 后端开发规范
 
@@ -136,35 +146,3 @@
 - 原子 UI 放 `components/ui`；跨页模式放 `shared/components`；域内逻辑放 `features/<area>`。
 - 优先 shadcn `variant` 与 CSS 变量，避免业务里硬编码颜色。
 - 文案走 i18n（`zh-CN` + `en`）；产品名 **Foam**。
-
-## 常用命令
-
-```bash
-# 配置
-cp config.example.yaml config.yaml   # 填 secrets + bootstrapAdmin
-
-# 开发
-make dev              # 前端 :8010 + 后端 :8000
-make dev-f / make dev-b
-make run              # 仅后端
-
-# 质量
-make format
-make code-check
-cd backend && go test ./...
-cd frontend && pnpm exec tsc -b
-
-# 构建
-make build-frontend   # → frontend/dist
-make build-backend    # → bin/foam
-make build-embedded   # dist + 二进制
-make cross-build
-make swagger
-```
-
-## 优先级
-
-1. 用户当前明确指令  
-2. 本文件（`AGENTS.md`）与匹配的 `.agent/skills/*`  
-3. `docs/*` 中的详细约定  
-4. 现有 `example` 切片与邻近代码风格  

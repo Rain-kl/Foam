@@ -99,7 +99,7 @@ transport  →  application  →  domain
 | CRUD | `/api/v1/admin/examples` | 示例资源（需 admin JWT） |
 | static | `frontend/dist` | SPA 托管 |
 
-> 响应：`{ "error_msg": "", "data": ... }`。扩展时复制 `example` 切片；流程见 [`.agent/skills/new-api/SKILL.md`](../.agent/skills/new-api/SKILL.md)。
+> 响应：`{ "error_msg": "", "data": ... }`。扩展时复制 `example` 切片；流程见 [`.agent/skills/new-api/SKILL.md`](../.agents/skills/new-api/SKILL.md)。
 
 ## 如何新增一个业务模块
 
